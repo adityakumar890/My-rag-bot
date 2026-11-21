@@ -1,6 +1,6 @@
 """Streamlit chat interface for the RAG-Based AI Chatbot.
 
-Run with:  streamlit run frontend/app.py
+Run with:  streamlit run frontend/streamlit_app.py
 """
 
 import os

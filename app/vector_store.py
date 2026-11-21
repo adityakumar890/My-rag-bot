@@ -1,22 +1,10 @@
-"""Embeddings (Sentence Transformers) and vector storage (ChromaDB)."""
-
-from functools import lru_cache
+"""Vector storage and similarity search with ChromaDB."""
 
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
 
-from backend.config import get_settings
-
-
-@lru_cache
-def get_embeddings() -> HuggingFaceEmbeddings:
-    """Load the embedding model once (it is downloaded on first use)."""
-    settings = get_settings()
-    return HuggingFaceEmbeddings(
-        model_name=settings.embedding_model,
-        encode_kwargs={"normalize_embeddings": True},
-    )
+from app.config import get_settings
+from app.embeddings import get_embeddings
 
 
 class VectorStore:

@@ -9,7 +9,7 @@ import hashlib
 import pytest
 from langchain_core.embeddings import Embeddings
 
-from backend.config import get_settings
+from app.config import get_settings
 
 
 class FakeEmbeddings(Embeddings):

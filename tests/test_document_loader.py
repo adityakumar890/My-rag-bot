@@ -3,7 +3,7 @@ import io
 import pytest
 from pypdf import PdfWriter
 
-from backend.services.document_loader import (
+from app.document_loader import (
     DocumentValidationError,
     load_document,
     validate_file,
@@ -26,7 +26,7 @@ def test_empty_file_rejected():
 
 
 def test_too_large_file_rejected(monkeypatch):
-    from backend.config import get_settings
+    from app.config import get_settings
 
     monkeypatch.setenv("MAX_FILE_SIZE_MB", "1")
     get_settings.cache_clear()

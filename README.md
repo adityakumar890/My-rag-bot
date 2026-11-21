@@ -11,7 +11,8 @@ An AI chatbot that answers questions about **your own documents**. You upload PD
 ```
 ┌──────────────────────┐   HTTP (JSON)   ┌──────────────────────────────────────────────┐
 │  Streamlit frontend  │ ──────────────> │               FastAPI backend                │
-│  frontend/app.py     │                 │               backend/main.py                │
+│  frontend/           │                 │               app/main.py                    │
+│  streamlit_app.py    │                 │                                              │
 │  - upload sidebar    │ <────────────── │                                              │
 │  - chat interface    │                 │  POST /upload                                │
 └──────────────────────┘                 │    1. validate file (type, size, content)    │
@@ -46,17 +47,15 @@ Interactive API docs: http://localhost:8000/docs
 
 ```
 .
-├── backend/
-│   ├── main.py                 # FastAPI app and routes
-│   ├── config.py               # Settings loaded from .env
-│   ├── models/schemas.py       # Request/response models
-│   └── services/
-│       ├── document_loader.py  # File validation + text extraction
-│       ├── text_splitter.py    # Chunking
-│       ├── vector_store.py     # Embeddings + ChromaDB
-│       ├── llm.py              # LLM provider factory (gemini/openai/fake)
-│       └── rag_pipeline.py     # Ingest + answer logic
-├── frontend/app.py             # Streamlit chat UI
+├── app/
+│   ├── main.py                 # FastAPI app, routes and request/response models
+│   ├── chatbot.py              # LLM provider (gemini/openai/fake) + RAG pipeline (ingest, answer)
+│   ├── document_loader.py      # File validation, text extraction and chunking
+│   ├── embeddings.py           # Sentence Transformers embedding model
+│   ├── vector_store.py         # ChromaDB storage and similarity search
+│   └── config.py               # Settings loaded from .env
+├── frontend/
+│   └── streamlit_app.py        # Streamlit chat UI
 ├── tests/                      # Pytest tests (run offline)
 ├── data/                       # Uploaded files + ChromaDB (created at runtime, gitignored)
 ├── requirements.txt
@@ -104,10 +103,10 @@ Open two terminals (with the virtual environment activated in both):
 
 ```bash
 # Terminal 1 - backend (http://localhost:8000)
-uvicorn backend.main:app --reload
+uvicorn app.main:app --reload
 
 # Terminal 2 - frontend (http://localhost:8501)
-streamlit run frontend/app.py
+streamlit run frontend/streamlit_app.py
 ```
 
 Then open http://localhost:8501, upload documents in the sidebar, click **Process documents**, and start asking questions.

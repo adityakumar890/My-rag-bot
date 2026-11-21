@@ -1,4 +1,4 @@
-from backend.services.text_splitter import split_into_chunks
+from app.document_loader import split_into_chunks
 
 
 def test_long_text_is_split_with_metadata():

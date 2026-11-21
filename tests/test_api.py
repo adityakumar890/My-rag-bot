@@ -1,9 +1,9 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from backend.main import app, get_pipeline
-from backend.services.rag_pipeline import RAGPipeline
-from backend.services.vector_store import VectorStore
+from app.main import app, get_pipeline
+from app.chatbot import RAGPipeline
+from app.vector_store import VectorStore
 
 
 @pytest.fixture

@@ -1,6 +1,6 @@
 """FastAPI backend for the RAG-Based AI Chatbot.
 
-Run with:  uvicorn backend.main:app --reload
+Run with:  uvicorn app.main:app --reload
 """
 
 import logging
@@ -9,23 +9,58 @@ from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
 from fastapi.concurrency import run_in_threadpool
+from pydantic import BaseModel, Field
 
-from backend.config import get_settings
-from backend.models.schemas import (
-    ChatRequest,
-    ChatResponse,
-    DocumentInfo,
-    DocumentListResponse,
-    MessageResponse,
-    Source,
-    UploadResponse,
-)
-from backend.services.document_loader import DocumentValidationError
-from backend.services.llm import LLMConfigurationError
-from backend.services.rag_pipeline import NoDocumentsError, RAGPipeline
+from app.chatbot import LLMConfigurationError, NoDocumentsError, RAGPipeline
+from app.config import get_settings
+from app.document_loader import DocumentValidationError
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("rag-chatbot")
+
+# ---------------- Request / response models ----------------
+
+
+class ChatRequest(BaseModel):
+    question: str = Field(..., min_length=1, max_length=2000)
+    top_k: int | None = Field(default=None, ge=1, le=20)
+
+
+class Source(BaseModel):
+    filename: str
+    chunk_index: int
+    page: int | None = None
+    content: str
+
+
+class ChatResponse(BaseModel):
+    answer: str
+    sources: list[Source]
+
+
+class UploadResponse(BaseModel):
+    filename: str
+    chunks: int
+    characters: int
+    message: str
+
+
+class DocumentInfo(BaseModel):
+    filename: str
+    chunks: int
+
+
+class DocumentListResponse(BaseModel):
+    documents: list[DocumentInfo]
+    total_chunks: int
+
+
+class MessageResponse(BaseModel):
+    message: str
+
+
+# ---------------- API ----------------
+
 
 app = FastAPI(
     title="RAG-Based AI Chatbot",
