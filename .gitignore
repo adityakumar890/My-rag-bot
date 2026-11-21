@@ -1,0 +1,18 @@
+# Secrets - never commit your real .env file
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# Runtime data (uploaded files and vector database)
+data/uploads/
+data/chroma_db/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
