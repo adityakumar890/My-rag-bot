@@ -8,6 +8,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 
 from backend.config import get_settings
 from backend.models.schemas import (
@@ -56,7 +57,8 @@ async def upload_document(
     content = await file.read(settings.max_file_size_bytes + 1)
 
     try:
-        chunks, characters = pipeline.ingest(filename, content)
+        # Ingestion is slow and synchronous; run it off the event loop.
+        chunks, characters = await run_in_threadpool(pipeline.ingest, filename, content)
     except DocumentValidationError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     except Exception as exc:
