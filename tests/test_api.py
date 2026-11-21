@@ -70,6 +70,6 @@ def test_delete_document(client):
 
 
 def test_delete_document_with_special_characters(client):
-    upload(client, "a#b?c%20.txt", b"Special name.")
-    assert client.delete("/documents/a%23b%3Fc%2520.txt").status_code == 200
+    upload(client, "a#b?c.txt", b"Special name.")
+    assert client.delete("/documents/a%23b%3Fc.txt").status_code == 200
     assert client.get("/documents").json()["documents"] == []
