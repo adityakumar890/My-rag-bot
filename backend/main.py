@@ -52,7 +52,8 @@ async def upload_document(
     settings = get_settings()
     # Keep only the base name to avoid path tricks like "../../etc/passwd".
     filename = Path(file.filename or "").name
-    content = await file.read()
+    # Read at most one byte over the limit so huge uploads can't exhaust memory.
+    content = await file.read(settings.max_file_size_bytes + 1)
 
     try:
         chunks, characters = pipeline.ingest(filename, content)
