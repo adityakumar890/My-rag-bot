@@ -81,6 +81,35 @@ PROMPT = ChatPromptTemplate.from_messages(
 )
 
 
+# Used when ANSWER_MODE=hybrid: documents first, general knowledge as a fallback.
+GENERAL_MARKER = "[GENERAL]"
+GENERAL_NOTE = "_Not from your documents. Answered from general knowledge._\n\n"
+
+HYBRID_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        (
+            "system",
+            "You are a helpful assistant. The context below comes from the "
+            "user's uploaded documents.\n"
+            "If the context answers the question, answer using the context.\n"
+            f"If it does not, start your reply with exactly {GENERAL_MARKER} "
+            "and then answer from your general knowledge. Be concise and clear.\n\n"
+            "Context:\n{context}",
+        ),
+        ("human", "{question}"),
+    ]
+)
+
+GENERAL_PROMPT = ChatPromptTemplate.from_messages(
+    [
+        ("system", "You are a helpful assistant. Be concise and clear."),
+        ("human", "{question}"),
+    ]
+)
+
+ANSWER_MODES = ("documents", "hybrid")
+
+
 class NoDocumentsError(RuntimeError):
     """Raised when the user asks a question before uploading any documents."""
 
@@ -120,11 +149,26 @@ class RAGPipeline:
         return len(chunks), characters
 
     def answer(self, question: str, top_k: int | None = None) -> tuple[str, list[Document]]:
-        if self.vector_store.count() == 0:
-            raise NoDocumentsError("No documents uploaded yet. Please upload a PDF or TXT file first.")
+        settings = get_settings()
+        mode = settings.answer_mode.lower().strip()
+        if mode not in ANSWER_MODES:
+            raise LLMConfigurationError(
+                f"Unknown ANSWER_MODE '{settings.answer_mode}'. Use documents or hybrid."
+            )
 
-        k = top_k or get_settings().top_k
+        if self.vector_store.count() == 0:
+            if mode == "documents":
+                raise NoDocumentsError("No documents uploaded yet. Please upload a PDF or TXT file first.")
+            chain = GENERAL_PROMPT | self.llm | StrOutputParser()
+            return GENERAL_NOTE + chain.invoke({"question": question}).strip(), []
+
+        k = top_k or settings.top_k
         chunks = self.vector_store.search(question, k=k)
-        chain = PROMPT | self.llm | StrOutputParser()
-        answer = chain.invoke({"context": format_context(chunks), "question": question})
-        return answer.strip(), chunks
+        prompt = HYBRID_PROMPT if mode == "hybrid" else PROMPT
+        chain = prompt | self.llm | StrOutputParser()
+        answer = chain.invoke({"context": format_context(chunks), "question": question}).strip()
+
+        if mode == "hybrid" and answer.startswith(GENERAL_MARKER):
+            # The documents did not contain the answer, so don't show them as sources.
+            return GENERAL_NOTE + answer[len(GENERAL_MARKER):].strip(), []
+        return answer, chunks

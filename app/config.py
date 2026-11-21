@@ -34,6 +34,7 @@ class Settings(BaseSettings):
 
     # Retrieval
     top_k: int = 4
+    answer_mode: str = "documents"  # documents | hybrid
 
     # Storage
     chroma_dir: str = "data/chroma_db"
