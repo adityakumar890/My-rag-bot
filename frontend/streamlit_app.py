@@ -79,7 +79,10 @@ with st.sidebar:
 
     health, _ = call_api("GET", "/health")
     if health:
-        st.caption(f"Backend: online · LLM: {health['llm_provider']}")
+        st.caption(
+            f"Backend: online · LLM: {health['llm_provider']}"
+            f" · Mode: {health.get('answer_mode', 'documents')}"
+        )
 
 
 # ---------------- Main area: chat ----------------

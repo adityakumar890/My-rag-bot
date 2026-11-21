@@ -78,7 +78,11 @@ def get_pipeline() -> RAGPipeline:
 @app.get("/health")
 def health() -> dict:
     settings = get_settings()
-    return {"status": "ok", "llm_provider": settings.llm_provider}
+    return {
+        "status": "ok",
+        "llm_provider": settings.llm_provider,
+        "answer_mode": settings.answer_mode,
+    }
 
 
 @app.post("/upload", response_model=UploadResponse)

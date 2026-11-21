@@ -95,6 +95,7 @@ GEMINI_API_KEY=your-key-from-https://aistudio.google.com/app/apikey
 
 - Use `LLM_PROVIDER=openai` + `OPENAI_API_KEY` to use OpenAI instead.
 - Use `LLM_PROVIDER=fake` to try the app without any API key (placeholder answers).
+- `ANSWER_MODE=documents` (default) answers only from your uploaded files. `ANSWER_MODE=hybrid` uses your files when they contain the answer and otherwise answers from the LLM's general knowledge, labelled "Not from your documents" and shown without sources. Restart the backend after changing it.
 - `.env` is listed in `.gitignore` — **never commit your real API keys.**
 
 ## Running
@@ -125,10 +126,10 @@ Tests use a fake LLM, fake embeddings and a temporary database, so they need no 
 
 - Only `.pdf` and `.txt` files are accepted; size is limited by `MAX_FILE_SIZE_MB` (default 10 MB).
 - Empty files, fake/corrupted/encrypted PDFs, and PDFs without extractable text (scanned images) are rejected with a clear message.
-- Asking a question before uploading any document returns a helpful error.
+- Asking a question before uploading any document returns a helpful error (in `hybrid` mode it answers from general knowledge instead).
 - Missing API keys and LLM/API failures (timeouts, quota, unavailable model) return readable errors shown in the chat.
 - Re-uploading a file with the same name replaces its old chunks.
 
 ## Configuration reference
 
-All settings live in `.env` (see `.env.example`): LLM provider/model/temperature/timeout, embedding model, `CHUNK_SIZE`, `CHUNK_OVERLAP`, `TOP_K`, storage paths and `BACKEND_URL`.
+All settings live in `.env` (see `.env.example`): LLM provider/model/temperature/timeout, embedding model, `CHUNK_SIZE`, `CHUNK_OVERLAP`, `TOP_K`, `ANSWER_MODE`, storage paths and `BACKEND_URL`.
