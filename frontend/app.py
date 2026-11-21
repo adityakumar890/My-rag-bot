@@ -4,6 +4,7 @@ Run with:  streamlit run frontend/app.py
 """
 
 import os
+from urllib.parse import quote
 
 import requests
 import streamlit as st
@@ -65,8 +66,11 @@ with st.sidebar:
             col1, col2 = st.columns([4, 1])
             col1.write(f"**{doc['filename']}**  \n{doc['chunks']} chunks")
             if col2.button("🗑️", key=f"del-{doc['filename']}", help="Delete"):
-                call_api("DELETE", f"/documents/{doc['filename']}")
-                st.rerun()
+                _, error = call_api("DELETE", f"/documents/{quote(doc['filename'], safe='')}")
+                if error:
+                    st.error(error)
+                else:
+                    st.rerun()
 
     st.divider()
     if st.button("Clear chat history"):
