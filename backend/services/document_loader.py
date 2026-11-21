@@ -1,5 +1,6 @@
 """Validate uploaded files and extract their text."""
 
+import codecs
 import io
 from pathlib import Path
 
@@ -60,13 +61,26 @@ def extract_pdf_pages(content: bytes) -> list[tuple[int, str]]:
 
 
 def extract_txt(content: bytes) -> str:
-    """Decode a text file, trying common encodings."""
-    for encoding in ("utf-8", "utf-16", "latin-1"):
+    """Decode a text file: UTF-16 only with a BOM, else UTF-8, else Latin-1."""
+    if content.startswith((codecs.BOM_UTF16_LE, codecs.BOM_UTF16_BE)):
+        encoding = "utf-16"
+    else:
         try:
-            return content.decode(encoding).strip()
+            content.decode("utf-8-sig")
+            encoding = "utf-8-sig"
         except UnicodeDecodeError:
-            continue
-    raise DocumentValidationError("Could not decode the text file.")
+            encoding = "latin-1"
+
+    try:
+        text = content.decode(encoding)
+    except UnicodeDecodeError as exc:
+        raise DocumentValidationError("Could not decode the text file.") from exc
+
+    if "\x00" in text:
+        raise DocumentValidationError(
+            "The text file looks binary or uses an unsupported encoding (save it as UTF-8)."
+        )
+    return text.strip()
 
 
 def load_document(filename: str, content: bytes) -> list[tuple[int | None, str]]:

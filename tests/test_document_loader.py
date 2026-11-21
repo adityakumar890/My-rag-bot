@@ -51,3 +51,14 @@ def test_pdf_without_text_rejected():
 def test_whitespace_only_txt_rejected():
     with pytest.raises(DocumentValidationError, match="No readable text"):
         load_document("blank.txt", b"   \n  ")
+
+
+def test_txt_encodings():
+    assert load_document("a.txt", "café".encode("utf-8")) == [(None, "café")]
+    assert load_document("b.txt", "café!".encode("latin-1")) == [(None, "café!")]
+    assert load_document("c.txt", "hello".encode("utf-16")) == [(None, "hello")]
+
+
+def test_bomless_utf16_txt_rejected():
+    with pytest.raises(DocumentValidationError, match="binary"):
+        load_document("d.txt", "hello".encode("utf-16-le"))
