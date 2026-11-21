@@ -33,10 +33,17 @@ class VectorStore:
         )
 
     def add_documents(self, filename: str, chunks: list[Document]) -> int:
-        """Store chunks. Re-uploading a file replaces its old chunks."""
-        self.delete_document(filename)
+        """Store chunks. Re-uploading a file replaces its old chunks.
+
+        New chunks are written first (upsert), then leftover old chunks are
+        removed, so a failed upload never erases the previous version.
+        """
+        old_ids = set(self.db.get(where={"filename": filename}, include=[])["ids"])
         ids = [f"{filename}::{c.metadata['chunk_index']}" for c in chunks]
         self.db.add_documents(chunks, ids=ids)
+        stale = list(old_ids - set(ids))
+        if stale:
+            self.db.delete(ids=stale)
         return len(chunks)
 
     def search(self, query: str, k: int) -> list[Document]:
